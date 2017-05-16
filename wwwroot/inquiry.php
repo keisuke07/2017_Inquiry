@@ -25,6 +25,20 @@ if (true === isset($_SESSION['buffer']['error_detail'])) {
     $error_detail = array();
 }
 
+// CSRFトークンを作成
+// XXX PHP7前提
+$csrf_token = hash('sha512', random_bytes(128));
+// var_dump($csrf_token);
+
+// CSRFトークンは10個まで（で後で追加するので、ここで
+while (10 <= count(@$_SESSION['csrf_token'])) {
+	array_shift($_SESSION['csrf_token']);
+}
+
+// CSRFトークンをSESSIONに入れておく：時間付き
+$_SESSION['csrf_token'][$csrf_token] = time();
+
+
 // XSS対策用関数
 function h($s) {
     return htmlspecialchars($s, ENT_QUOTES);
@@ -45,6 +59,10 @@ function h($s) {
   if (isset($error_detail['error_must_email'])) {
     echo '<div style="color: red;">メアドは必須です。</div>';
   }
+  //
+  if (isset($error_detail['error_csrf_token'])) {
+    echo '<div style="color: red;">CSRFトークンエラです。</div>';
+  }
 /*
 error_must_body
 error_format_email
@@ -64,6 +82,7 @@ error_format_birthday
     問い合わせ内容<textarea name="body">
 <?php echo h((string)@$input['body']); ?></textarea><br>
 
+	<input type="hidden" name="csrf_token" value="<?php echo h($csrf_token); ?>">
     <button>問い合わせる</button>
   </form>
 </body>
