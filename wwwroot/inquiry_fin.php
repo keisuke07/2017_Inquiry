@@ -1,12 +1,12 @@
 <?php
 // inquiry_fin.php
 //
-ob_start();
-session_start();
+require_once( __DIR__ . '/init.php');
 
 //
 require_once( __DIR__ . '/dbh.php');
-// var_dump(__DIR__ . '/dbh.php'); // 何をincludeしたのか
+//var_dump(__DIR__ . '/dbh.php'); // 何をincludeしたか、の確認
+
 // 入力された情報を取得
 /*
 $email = (string)@$_POST['email'];
@@ -19,7 +19,7 @@ $input_data = array();
 foreach($params  as  $p) {
     $input_data[$p] = (string)@$_POST[$p];
 }
-// var_dump($input_data);
+//var_dump($input_data);
 
 // validate(情報は正しい？)
 $error_detail = array(); // エラー情報格納用変数
@@ -28,16 +28,16 @@ $error_detail = array(); // エラー情報格納用変数
 // tokenの存在確認(check exist)
 $posted_token = $_POST['csrf_token'];
 if (false === isset($_SESSION['csrf_token'][$posted_token])) {
-    // tokenがないのでエラー
+    // tokenが無いんでエラー
     $error_detail['error_csrf_token'] = true;
 } else {
     // tokenの寿命確認(check life)
     $ttl = $_SESSION['csrf_token'][$posted_token];
-    if (time() >= $ttl + 60) {
+    if (time() >=  $ttl + 60) {
         // token作成から60秒以上経過しているのでNG
         $error_detail['error_csrf_timeover'] = true;
     }
-    // 何れにしてもtokenは1回しか使えないので、消す
+    // いずれにしてもtokenは１回しか使えないので、消す
     unset($_SESSION['csrf_token'][$posted_token]);
 }
 
@@ -82,32 +82,29 @@ if (array() !== $error_detail) {
 // 入力された情報をDBにinsert
 // DBハンドルを取得
 $dbh = get_dbh();
-// var_dump($dbh);
+//var_dump($dbh);
 
-// SQL文（準備された文：プリペアドステートメント）を作成
+// SQL文(準備された文：プリペアドステートメント)を作成
 $sql = 'INSERT INTO inquirys(email, inquiry_body, name, birthday)
-        VALUES(:email, :inquiry_body, :name, :birthday);';
+  VALUES(:email, :inquiry_body, :name, :birthday);';
 $pre = $dbh->prepare($sql);
-
+//var_dump($pre);
 // プレースホルダにデータをバインド
 $pre->bindValue(':email', $input_data['email']);
 $pre->bindValue(':inquiry_body', $input_data['body']);
 $pre->bindValue(':birthday', $input_data['birthday']);
 $pre->bindValue(':name', $input_data['name']);
-
 // SQLを実行
 $r = $pre->execute();
-// var_dump($r);
+//var_dump($r);
 if (false === $r) {
-    // XXX 本当はもうちょっと丁寧に色々とやる
+    // XXX 本当はもうちょっと丁寧にいろいろとやる
     echo 'すみませんデータが取得できませんでした';
     exit;
 }
-// 「ありがとう」Pageの出力
-?>
 
-<html>
-    <body>
-        入力ありがとうございました。
-    </body>
-</html>
+// 「ありがとう」Pageの出力
+// テンプレートを指定して出力
+error_reporting(E_ALL & ~E_NOTICE);
+$smarty_obj->display('inquiry_fin.tpl');
+

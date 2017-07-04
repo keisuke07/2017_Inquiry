@@ -5,16 +5,15 @@ require_once('db_config.php');
 // DB用関数
 // ----------------------------
 function get_dbh() {
-	// 「二重接続」を防ぐためのロジック
-	static $dbh = NULL;
-	if (NULL !== $dbh) {
-		return $dbh;
-	}
+    // 「二重接続」を防ぐためのロジック
+    static $dbh = NULL;
+    if (NULL !== $dbh) {
+        return $dbh;
+    }
 
-	// 設定値の取得
-	$db_config = db_config();
+    // 設定値の取得
+    $db_config = db_config();
     // データの設定
-    // XXX 実際は、configファイル等で外出しにする事が多い
     $user = $db_config['user'];
     $pass = $db_config['pass'];
     $dsn = "mysql:dbname={$db_config['database']};host={$db_config['host']};charset={$db_config['charset']}";
